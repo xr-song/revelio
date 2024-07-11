@@ -314,7 +314,12 @@ def worker(BAM,TDIR,header,ref,reference,QUALITY):
 			if (qseq == None) or (qual == None): continue
 
 			# determine whether to read CT mismatches or GA mismatches
-			CT = bool((alignment.is_read1 and not alignment.is_reverse) or (alignment.is_read2 and alignment.is_reverse) or (not alignment.is_paired and not alignment.is_reverse))
+			YS = alignment.get_tag("YS") if alignment.has_tag("YS") else None # added for bsBolt
+			if YS:
+				print(YS)
+				CT = 'W_' in YS # aligned to Watson strand, no matter if it's read 1 or 2
+			else:
+				CT = bool((alignment.is_read1 and not alignment.is_reverse) or (alignment.is_read2 and alignment.is_reverse) or (not alignment.is_paired and not alignment.is_reverse))
 
 			# get aligned pairs, with sequence from either genome (if given) or MD-tag
 			pairs, MD = get_aligned_pairs_with_sequence(alignment,reference)
