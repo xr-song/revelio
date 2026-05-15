@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# This is the modified version with adaptation to the BAM format from BSBolt alignment output.
 
 '''
 Title: revelio.py
@@ -275,56 +276,7 @@ def DoubleMasking(reference,qseq,qual,pairs,CT):
     # return modified sequence and quality string
 	return new_seq, new_qual
 
-def DoubleMaskingN(reference,qseq,qual,pairs,CT):
 
-        ######################################################################################################
-        ## reference = dictionary[key] result of build_genome(), or None                                    ##
-        ## qseq = a string of 'ACATCAGTCG...'                                                               ##
-        ## qual = an array of unsigned chars eg. array('B',[20,20,21,21,30,39,...])                         ##
-        ## pairs = result of read.get_aligned_pairs() eg. [(0, 78688), (1, 78689), (2, 78690), ...]         ##
-        ## CT = boolean decision whether to read CT or GA mismatches eg. True or False                      ##
-        ######################################################################################################
-
-        new_seq, new_qual = "", array('B',[])
-
-        # modifying bisulfite data
-        for bp in pairs:
-
-                # skip deletions
-                if bp[0] is None: continue
-
-                # positions unchanged on insertions
-                elif bp[1] is None:
-                        new_qual.append(qual[bp[0]])
-                        new_seq += qseq[bp[0]]
-
-                # all other cases are matches / mismatches
-                else:
-
-                        # get reference base from genome or MD tag
-                        if reference: refbase = reference[bp[1]].upper()
-                        else: refbase = bp[2].upper()
-
-                        # check for CT or GA mismatches depending on read and strand
-                        if qseq[bp[0]] == "T" and refbase == "C" and CT:
-                                new_seq += "N"
-                                new_qual.append(0)
-                        elif qseq[bp[0]] == "A" and refbase == "G" and not CT:
-                                new_seq += "N"
-                                new_qual.append(0)
-
-                        # do this for all CT:Ts and GA:As
-                        elif (qseq[bp[0]] == "T" and CT) or (qseq[bp[0]] == "A" and not CT):
-                                new_seq += qseq[bp[0]]
-                                new_qual.append(0)
-
-                        # positions unchanged for matches and non-bisulfite mismatches
-                        else:
-                                new_seq += qseq[bp[0]]
-                                new_qual.append(qual[bp[0]])
-
-    # return modified sequence and quality string
-        return new_seq, new_qual
 
 ####### Function for READING the input reads, modifying, and sending them to 'q'
 def worker(BAM,TDIR,header,ref,reference,QUALITY):
@@ -379,7 +331,7 @@ def worker(BAM,TDIR,header,ref,reference,QUALITY):
 				except (UnboundLocalError): pass
 			
 			# carry out double-masking procedure
-			new = DoubleMaskingN(reference,qseq,qual,pairs,CT)
+			new = DoubleMasking(reference,qseq,qual,pairs,CT)
 			alignment.query_sequence = new[0]
 
 			if QUALITY: alignment.query_qualities = new[1]

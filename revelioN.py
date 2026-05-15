@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# This is the modified version in which all masked bases have N replacement
+
 '''
 Title: revelio.py
 Date: 20190522
@@ -315,7 +317,7 @@ def DoubleMaskingN(reference,qseq,qual,pairs,CT):
 
                         # do this for all CT:Ts and GA:As
                         elif (qseq[bp[0]] == "T" and CT) or (qseq[bp[0]] == "A" and not CT):
-                                new_seq += qseq[bp[0]]
+                                new_seq += "N" #qseq[bp[0]]
                                 new_qual.append(0)
 
                         # positions unchanged for matches and non-bisulfite mismatches
@@ -382,7 +384,9 @@ def worker(BAM,TDIR,header,ref,reference,QUALITY):
 			new = DoubleMaskingN(reference,qseq,qual,pairs,CT)
 			alignment.query_sequence = new[0]
 
-			if QUALITY: alignment.query_qualities = new[1]
+			if QUALITY: 
+                            alignment.query_qualities = new[1]
+
 			else: alignment.query_qualities = qual
 
 			# write read to 'modified' file
